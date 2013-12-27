@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Simply tell requirejs to load the testRunner.js file -->
+    <script data-main="testRunner" src="webjars/requirejs/2.1.8/require.js"></script>
+    <script>
+      // add a path for jquery
+      requirejs.config({
+          paths: {
+            "jquery" : "webjars/jquery/1.10.2/jquery"
+          }
+        });
+
+      // just throw an error if require js finds a problem
+      requirejs.onError = function(e) {
+        throw e;
+      };
+    </script>
+
+  </head>
+<body>
+</body>
+</html>

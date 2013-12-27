@@ -8,7 +8,7 @@ case class Arguments(
   testPage: String,
   browserVersions: Seq[BrowserVersion] = Seq(BrowserVersion.getDefault),
   idleTimeout: FiniteDuration = 1.second,
-  testTimeout: FiniteDuration = 20.seconds)
+  testTimeout: FiniteDuration = 30.seconds)
 
 object Arguments {
 
