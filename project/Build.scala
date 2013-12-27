@@ -19,16 +19,18 @@ object BrowserTestBuild extends Build {
 
   val onlyScalaSource = onlyScalaSourceIn(Compile) ++ onlyScalaSourceIn(Test)
 
+  val buildSettings = Seq(organization := "org.qirx")
+
   lazy val root = Project(id = "browser-tests-root", base = file("."))
-    .settings(
-      publishArtifact := false,
-      organization := "org.qirx")
+    .settings(publishArtifact := false)
+    .settings(buildSettings: _*)
     .aggregate(browserTests)
 
   lazy val browserTests =
     Project(id = "browser-tests", base = file("browser-tests"))
       .settings(releaseSettings: _*)
       .settings(onlyScalaSource: _*)
+      .settings(buildSettings: _*)
       .settings(
         libraryDependencies ++= Seq(
           "org.scala-sbt" % "test-interface" % "1.0",
@@ -46,8 +48,6 @@ object BrowserTestBuild extends Build {
     Project(id = "browser-tests-example", base = file("example"))
       .settings(publishArtifact := false)
       .settings(onlyScalaSource: _*)
-      //TODO remove
-      .dependsOn(browserTests)
 
   private def rhinoflyRepo(version: String) = {
     val repo = if (version endsWith "SNAPSHOT") "snapshot" else "release"
