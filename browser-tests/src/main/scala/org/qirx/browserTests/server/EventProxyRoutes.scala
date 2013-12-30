@@ -2,11 +2,9 @@ package org.qirx.browserTests.server
 
 import org.qirx.browserTests.runner.EventProxy
 
-import akka.actor.ActorRefFactory
-
 import sbt.testing
-
 import spray.http.StatusCodes
+import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling.Unmarshaller
 import spray.json._
 import spray.routing.Directives

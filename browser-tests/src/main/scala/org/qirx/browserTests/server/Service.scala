@@ -1,13 +1,14 @@
 package org.qirx.browserTests.server
 
 import scala.io.Source
+
 import org.qirx.browserTests.runner.EventProxy
+import org.qirx.spray.embedded.Listener
+
 import akka.actor.Props
+import spray.http.StatusCodes
 import spray.routing.HttpServiceActor
 import spray.routing.directives.ContentTypeResolver
-import org.qirx.spray.embedded.Listener
-import spray.http.StatusCode
-import spray.http.StatusCodes
 
 object Service {
 
