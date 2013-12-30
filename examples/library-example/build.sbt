@@ -1,4 +1,4 @@
-name := "browser-tests-example"
+name := "browser-tests-library-example"
 
 libraryDependencies ++= Seq(
   "org.webjars" % "requirejs" % "2.1.8" % "test",

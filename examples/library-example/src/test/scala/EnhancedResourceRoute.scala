@@ -1,7 +1,5 @@
-
-import org.qirx.browserTests.server.ResourceRouteFactory
-import org.qirx.browserTests.runner.EventProxy
 import org.qirx.browserTests.server.DefaultResourceRoute
+import org.qirx.browserTests.runner.EventProxy
 
 class EnhancedResourceRoute(classLoader: ClassLoader, eventProxy: EventProxy)
   extends DefaultResourceRoute(classLoader, eventProxy) {

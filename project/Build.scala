@@ -27,10 +27,10 @@ object BrowserTestBuild extends Build {
 
   lazy val root = Project(id = "browser-tests-root", base = file("."))
     .settings(containerProjectSettings: _*)
-    .aggregate(browserTests, example)
+    .aggregate(browserTests, browserTestsPlugin, examples)
 
   lazy val browserTests =
-    Project(id = "browser-tests", base = file("browser-tests"))
+    Project(id = "browser-tests", base = file("library"))
       .settings(standardProjectSettings: _*)
       .settings(
         libraryDependencies ++= Seq(
@@ -38,11 +38,31 @@ object BrowserTestBuild extends Build {
           "org.qirx" %% "embedded-spray" % "0.2",
           "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.39.0"),
         resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local",
-        UpdateVersionInFiles(file("README.md"), file("example/build.sbt")))
+        UpdateVersionInFiles(
+          file("README.md"),
+          file("examples/library-example/build.sbt")))
 
-  lazy val example =
-    Project(id = "browser-tests-example", base = file("example"))
-      .settings(exampleProjectSettings:_*)
+  lazy val browserTestsPlugin =
+    Project(id = "browser-tests-plugin", base = file("plugin"))
+      .settings(standardProjectSettings: _*)
+      .settings(
+        sbtPlugin := true,
+        UpdateVersionInFiles(
+          file("README.md"),
+          file("examples/plugin-example/build.sbt")))
+
+  lazy val examples =
+    Project(id = "browser-tests-examples", base = file("examples"))
+      .settings(containerProjectSettings: _*)
+      .aggregate(libraryExample, pluginExample)
+
+  lazy val libraryExample =
+    Project(id = "browser-tests-library-example", base = file("examples/library-example"))
+      .settings(exampleProjectSettings: _*)
+
+  lazy val pluginExample =
+    Project(id = "browser-tests-plugin-example", base = file("examples/plugin-example"))
+      .settings(exampleProjectSettings: _*)
 
   private def rhinoflyRepo(version: String) = {
     val repo = if (version endsWith "SNAPSHOT") "snapshot" else "release"
