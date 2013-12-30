@@ -4,14 +4,18 @@ define([ 'jquery' ], function($) {
    * The server is quite strict, we need to specify json as a content type
    */
   function post(url, data) {
-    data = JSON.stringify(data);
-    //console.log(data);
-    $.ajax({
+
+    var info = {
       type : 'POST',
       url : url,
-      data : data,
       contentType : 'application/json'
-    });
+    };
+
+    if (data) {
+      info["data"] = data = JSON.stringify(data);
+    }
+
+    $.ajax(info);
   }
 
   function postMsg(url, msg, stack) {
@@ -57,7 +61,7 @@ define([ 'jquery' ], function($) {
         var parts = stackLine.split('@');
         var allParts = parts[parts.length - 1].split(':');
         allParts.unshift(parts[0]);
-        if (allParts[1].length == 0) allParts[1] = "[unknown method]"
+        if (allParts[0].length == 0) allParts[0] = "[unknown method]"
         stack.push({
           declaringClass : '[unknown class]',
           methodName : allParts[0],
@@ -71,6 +75,12 @@ define([ 'jquery' ], function($) {
 
   function getMsg(e) {
     return e.message || "" + e;
+  }
+
+  function done() {
+    return function() {
+      post('event/done');
+    }
   }
 
   return {
@@ -89,6 +99,7 @@ define([ 'jquery' ], function($) {
       pending : event('pending'),
       ignored : event('ignored'),
       canceled : event('canceled')
-    }
+    },
+    done: done()
   };
 });

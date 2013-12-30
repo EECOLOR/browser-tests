@@ -1,9 +1,11 @@
 package org.qirx.browserTests.browser
 
-import com.gargoylesoftware.htmlunit.BrowserVersion
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
-import sbt.testing
+
+import com.gargoylesoftware.htmlunit.BrowserVersion
 import com.gargoylesoftware.htmlunit.WebConsole
+
+import sbt.testing
 
 class Browser(logger: testing.Logger, version: BrowserVersion) extends HtmlUnitDriver(version) {
 

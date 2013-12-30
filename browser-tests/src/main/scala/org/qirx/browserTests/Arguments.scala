@@ -7,7 +7,7 @@ import java.util.logging
 case class Arguments(
   testPage: String,
   browserVersions: Seq[BrowserVersion] = Seq(BrowserVersion.getDefault),
-  idleTimeout: FiniteDuration = 1.second,
+  idleTimeout: FiniteDuration = 2.second,
   testTimeout: FiniteDuration = 30.seconds)
 
 object Arguments {

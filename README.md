@@ -15,3 +15,7 @@ val appDependencies = Seq(
 resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
 ```
 
+Example
+-------
+
+See the example in the `example` directory

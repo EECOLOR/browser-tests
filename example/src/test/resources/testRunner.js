@@ -17,4 +17,10 @@ define([ 'jquery', 'testUtilities', testName ], function($, utils, test) {
   utils.log.info("");
   utils.log.info("\033[36mTest '" + testName + "' complete\033[0m");
   utils.log.info("");
+
+  /*
+   * This is not strictly nescessary, but speeds up testing because the
+   * framework does not have to wait on the idleTimeout
+   */
+  utils.done()
 });

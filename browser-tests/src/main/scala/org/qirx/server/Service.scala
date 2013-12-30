@@ -1,13 +1,13 @@
 package org.qirx.browserTests.server
 
 import scala.io.Source
-
 import org.qirx.browserTests.runner.EventProxy
-
 import akka.actor.Props
-
 import spray.routing.HttpServiceActor
 import spray.routing.directives.ContentTypeResolver
+import org.qirx.spray.embedded.Listener
+import spray.http.StatusCode
+import spray.http.StatusCodes
 
 object Service {
 
@@ -30,7 +30,16 @@ class ServiceActor(
       }
     } ~
       pathPrefix("event") {
-        eventProxyRoutes.eventRoutes
+        eventProxyRoutes.eventRoutes ~
+          path("done") {
+            post {
+
+              complete {
+                context.parent ! Listener.Unbind
+                StatusCodes.NoContent
+              }
+            }
+          }
       } ~
       pathPrefix("log") {
         eventProxyRoutes.logRoutes
@@ -58,7 +67,6 @@ class ServiceActor(
   def resourceAsString(name: String) = {
     val possibleResourceStream = Option(classLoader.getResourceAsStream(name))
 
-    for (resourceStream <- possibleResourceStream) yield
-      Source.fromInputStream(resourceStream).mkString
+    for (resourceStream <- possibleResourceStream) yield Source.fromInputStream(resourceStream).mkString
   }
 }

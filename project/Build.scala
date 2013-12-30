@@ -1,90 +1,54 @@
 import sbt._
 import sbt.Keys._
-import sbtrelease.ReleaseStateTransformations.commitReleaseVersion
 import sbtrelease.ReleasePlugin.releaseSettings
-import sbtrelease.ReleasePlugin.ReleaseKeys.releaseProcess
-import sbtrelease.ReleasePlugin.ReleaseKeys.versionControlSystem
-import sbtrelease.ReleasePlugin.ReleaseKeys.releaseVersion
-import sbtrelease.ReleaseStep
-import sbtrelease.Vcs
+import org.qirx.sbtrelease.UpdateVersionInFiles
 
 object BrowserTestBuild extends Build {
 
-  override lazy val settings = super.settings ++
-    Seq(
-      shellPrompt := { s => Project.extract(s).currentProject.id + " > " })
+  // for all projects
+  val defaultSettings = Seq(
+    organization := "org.qirx",
+    onlyScalaSourcesIn(Compile),
+    onlyScalaSourcesIn(Test))
 
-  def onlyScalaSourceIn(c: Configuration) =
-    inConfig(c)(unmanagedSourceDirectories := Seq(scalaSource.value))
+  val containerProjectSettings = defaultSettings ++ Seq(
+    publishArtifact := false,
+    unmanagedSourceDirectories in Compile := Seq(),
+    unmanagedSourceDirectories in Test := Seq())
 
-  val onlyScalaSource = onlyScalaSourceIn(Compile) ++ onlyScalaSourceIn(Test)
+  val publishSettings = releaseSettings ++ Seq(
+    publishTo <<= version(rhinoflyRepo),
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"))
 
-  val buildSettings = Seq(organization := "org.qirx")
+  val standardProjectSettings = defaultSettings ++ publishSettings
+
+  val exampleProjectSettings = defaultSettings ++ Seq(
+    publishArtifact := false)
 
   lazy val root = Project(id = "browser-tests-root", base = file("."))
-    .settings(publishArtifact := false)
-    .settings(buildSettings: _*)
-    .aggregate(browserTests)
+    .settings(containerProjectSettings: _*)
+    .aggregate(browserTests, example)
 
   lazy val browserTests =
     Project(id = "browser-tests", base = file("browser-tests"))
-      .settings(releaseSettings: _*)
-      .settings(onlyScalaSource: _*)
-      .settings(buildSettings: _*)
+      .settings(standardProjectSettings: _*)
       .settings(
         libraryDependencies ++= Seq(
           "org.scala-sbt" % "test-interface" % "1.0",
-          "com.typesafe.akka" %% "akka-actor" % "2.2.3",
-          "io.spray" % "spray-can" % "1.2.0",
-          "io.spray" % "spray-routing" % "1.2.0",
-          "io.spray" %% "spray-json" % "1.2.5",
+          "org.qirx" %% "embedded-spray" % "0.2",
           "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.39.0"),
-        resolvers += "spray repo" at "http://repo.spray.io",
-        releaseProcess := withUpdatedReadme(releaseProcess.value),
-        publishTo <<= version(rhinoflyRepo),
-        credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"))
+        resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local",
+        UpdateVersionInFiles(file("README.md"), file("example/build.sbt")))
 
   lazy val example =
     Project(id = "browser-tests-example", base = file("example"))
-      .settings(publishArtifact := false)
-      .settings(onlyScalaSource: _*)
+      .settings(exampleProjectSettings:_*)
 
   private def rhinoflyRepo(version: String) = {
     val repo = if (version endsWith "SNAPSHOT") "snapshot" else "release"
     Some("Rhinofly Internal " + repo.capitalize + " Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-" + repo + "-local")
   }
 
-  private def withUpdatedReadme(steps: Seq[ReleaseStep]) =
-    insertBeforeIn(steps,
-      before = commitReleaseVersion,
-      step = updateReadmeVersion)
-
-  private def insertBeforeIn(
-    seq: Seq[ReleaseStep], before: ReleaseStep, step: ReleaseStep) = {
-
-    val (beforeStep, rest) = seq.span(_ != before)
-    (beforeStep :+ step) ++ rest
-  }
-
-  private val updateReadmeVersion: ReleaseStep = { s: State =>
-
-    val p = Project.extract(s)
-    //"org.qirx" %% "sbt-webjar" % "version"
-    val pattern = "(\"" + p.get(organization) + "\"\\s+%+\\s+\"" + p.get(name) + "\"\\s+%\\s+\")[\\w\\.-]+(\")"
-    val replacement = "$1" + p.get(releaseVersion)(p.get(version)) + "$2"
-    val vcs = p.get(versionControlSystem).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
-
-    def updateFile(fileName: String) = {
-      val contents = IO.read(file(fileName))
-      val newContents = contents.replaceAll(pattern, replacement)
-      IO.write(file(fileName), newContents)
-      vcs.add(file(fileName).getAbsolutePath) !! s.log
-    }
-
-    updateFile("README.md")
-    updateFile("example/build.sbt")
-
-    s
-  }
-
+  def onlyScalaSourcesIn(c: Configuration) =
+    unmanagedSourceDirectories in c := Seq((scalaSource in c).value)
 }

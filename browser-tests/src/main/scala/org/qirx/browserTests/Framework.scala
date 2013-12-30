@@ -5,7 +5,7 @@ import org.qirx.browserTests.runner.Runner
 
 class Framework extends testing.Framework {
 
-  val name = "Browser tests - sbt test framework"
+  val name = "Browser tests"
 
   val fingerprints = Array[testing.Fingerprint](
     new testing.AnnotatedFingerprint {
