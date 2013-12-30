@@ -9,7 +9,7 @@ Installation
 
 ``` scala
 val appDependencies = Seq(
-  "org.qirx" %% "browser-tests" % "0.3"
+  "org.qirx" %% "browser-tests" % "0.4"
 )
 
 resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
