@@ -16,7 +16,5 @@ define(function() {
 
     // We can also use ansi colors!
     log.info('\033[31mOne\033[0m \033[32mTwo\033[0m \033[33mThree\033[0m \033[34mFour\033[0m')
-
   };
-
 });

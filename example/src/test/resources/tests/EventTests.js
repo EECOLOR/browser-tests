@@ -20,5 +20,4 @@ define(function() {
       event.failure('We failed, but we might have a stack available', e);
     }
   };
-
 });
