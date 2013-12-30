@@ -3,12 +3,18 @@ package org.qirx.browserTests
 import com.gargoylesoftware.htmlunit.BrowserVersion
 import scala.concurrent.duration._
 import java.util.logging
+import org.qirx.browserTests.server.ResourceRoute
+import org.qirx.browserTests.server.DefaultResourceRoute
+import org.qirx.browserTests.server.ResourceRouteFactory
+import org.qirx.browserTests.server.ResourceRouteFactory
+import org.qirx.browserTests.runner.EventProxy
 
 case class Arguments(
   testPage: String,
   browserVersions: Seq[BrowserVersion] = Seq(BrowserVersion.getDefault),
   idleTimeout: FiniteDuration = 2.second,
-  testTimeout: FiniteDuration = 30.seconds)
+  testTimeout: FiniteDuration = 30.seconds,
+  resourceRouteFactory: ResourceRouteFactory = DefaultResourceRoute)
 
 object Arguments {
 
@@ -16,6 +22,7 @@ object Arguments {
   val BROWSER_VERSION = "browserVersions"
   val IDLE_TIMEOUT = "idleTimeout"
   val TEST_TIMEOUT = "testTimeout"
+  val RESOURCE_ROUTE_FACTORY = "resourceRouteFactory"
 
   def apply(args: Seq[String], classLoader: ClassLoader): Arguments = {
     val argumentMap = args.grouped(2).toSeq.map {
@@ -36,6 +43,8 @@ object Arguments {
           arguments.copy(idleTimeout = getTimeout(value))
         case (TEST_TIMEOUT, value) =>
           arguments.copy(testTimeout = getTimeout(value))
+        case (RESOURCE_ROUTE_FACTORY, value) =>
+          arguments.copy(resourceRouteFactory = getResourceRouteFactory(value, classLoader))
         case (unknown, _) =>
           throw new RuntimeException(s"Unknown argument '$unknown'")
 
@@ -58,4 +67,16 @@ object Arguments {
     val d = Duration(value)
     FiniteDuration(d.length, d.unit)
   }
+
+  def getResourceRouteFactory(name: String, classLoader: ClassLoader) =
+    try {
+      classLoader.loadClass(name)
+        .asSubclass(classOf[ResourceRouteFactory])
+        .newInstance
+    } catch {
+      case e @ (_: ClassNotFoundException | _: IllegalAccessException | _: InstantiationException | _: SecurityException | _: ExceptionInInitializerError) =>
+        throw new RuntimeException(s"Could not create an instance of $name, make sure it exists and is on the classpath", e)
+      case e: ClassCastException =>
+        throw new RuntimeException(s"$name does not extend ${classOf[ResourceRouteFactory].getName}", e)
+    }
 }

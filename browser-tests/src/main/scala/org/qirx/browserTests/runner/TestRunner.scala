@@ -10,14 +10,18 @@ import scala.concurrent.duration._
 import org.qirx.browserTests.Arguments
 import org.qirx.browserTests.browser.Browser
 import org.qirx.browserTests.server.Service
+
 import org.qirx.spray.embedded._
 
 import com.gargoylesoftware.htmlunit.BrowserVersion
 
-class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
-  server: Server)(implicit executor:ExecutionContext) {
+import org.qirx.browserTests.server.EventProxyRoutes
 
-  private val Arguments(testPage, browserVersions, idleTimeout, testTimeout) =
+class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
+  server: Server)(implicit executor: ExecutionContext) {
+
+  private val Arguments(
+    testPage, browserVersions, idleTimeout, testTimeout, resourceRouteFactory) =
     arguments
 
   def run(eventProxy: EventProxy, testName: String): Unit =
@@ -49,15 +53,15 @@ class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
     }
   }
 
-  private def run(host:Host, port:Port, browser: Browser, testName: String): Unit = {
+  private def run(host: Host, port: Port, browser: Browser, testName: String): Unit = {
     val url = s"http://$host:$port/$testPage?test=$testName"
     Future(browser.get(url))
   }
 
-  private def bindToServerWith(eventProxy: EventProxy):(Listener, Host, Port) = {
-    val service = Service(testClassLoader, eventProxy)
+  private def bindToServerWith(eventProxy: EventProxy): (Listener, Host, Port) = {
     val host = "localhost"
     val port = Port.free
+    val service = createService(eventProxy)
     val listener = server.bind(host, port, service)
 
     val awaitServerBind = new TestRunner.Awaiter("bind", listener.bound, eventProxy)
@@ -66,6 +70,13 @@ class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
 
     (listener, host, port)
   }
+
+  private def createService(eventProxy: EventProxy) = {
+    val resourceRoute = resourceRouteFactory(testClassLoader, eventProxy)
+    val eventProxyRoutes = new EventProxyRoutes(eventProxy)
+    Service(eventProxyRoutes, resourceRoute)
+  }
+
 }
 
 object TestRunner {

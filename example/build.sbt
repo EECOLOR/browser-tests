@@ -3,7 +3,7 @@ name := "browser-tests-example"
 libraryDependencies ++= Seq(
   "org.webjars" % "requirejs" % "2.1.8" % "test",
   "org.webjars" % "jquery" % "1.10.2" % "test",
-  "org.qirx" %% "browser-tests" % "0.5" % "test"
+  "org.qirx" %% "browser-tests" % "0.6-SNAPSHOT" % "test"
 )
 
 resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
@@ -28,6 +28,9 @@ definedTests in Test ++= {
 // To find out which are available, see: http://htmlunit.sourceforge.net/apidocs/com/gargoylesoftware/htmlunit/BrowserVersion.html
 testOptions in Test += Tests.Argument(testFramwork, "browserVersions", "INTERNET_EXPLORER_10,FIREFOX_17")
 
+// In this example we make it a bit easier to load webjars
+testOptions in Test += Tests.Argument(testFramwork, "resourceRouteFactory", "EnhancedResourceRouteFactory")
+
 // You can also pass test parameters on the fly, see: http://www.scala-sbt.org/0.13.0/docs/Detailed-Topics/Testing#options
 // Available options:
 //  testPage <name>             The page to load in the headless browser
@@ -38,6 +41,8 @@ testOptions in Test += Tests.Argument(testFramwork, "browserVersions", "INTERNET
 //                              https://github.com/scala/scala/blob/v2.10.3/src/library/scala/concurrent/duration/Duration.scala#L77
 //  testTimeout <duration>      (optional) The amount of time the total test may take.
 //                              Default is 30 seconds.
+//  resourceRouteFactory        (optional) A factory that return an object that contains
+//                              the route for resource loading
 
 // Method to create a test definition from a file
 // once we have an sbt plugin we can hide this
