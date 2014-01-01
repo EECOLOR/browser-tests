@@ -1,6 +1,6 @@
 var queryString = window.location.search;
 // get the testName from the url
-var testName = queryString.split("=")[1]
+var testName = queryString.split("test=")[1]
 
 // let requirejs handle loading the test
 define([ 'jquery', 'testUtilities', testName ], function($, utils, test) {

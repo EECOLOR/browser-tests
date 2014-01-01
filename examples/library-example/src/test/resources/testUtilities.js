@@ -12,7 +12,7 @@ define([ 'jquery' ], function($) {
     };
 
     if (data) {
-      info["data"] = data = JSON.stringify(data);
+      info["data"] = JSON.stringify(data);
     }
 
     $.ajax(info);
