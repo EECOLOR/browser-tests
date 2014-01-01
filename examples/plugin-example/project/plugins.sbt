@@ -1,4 +1,4 @@
-addSbtPlugin("org.qirx" % "browser-tests-plugin" % "0.6-SNAPSHOT")
+addSbtPlugin("org.qirx" % "browser-tests-plugin" % "0.6")
 
 addSbtPlugin("org.qirx" % "sbt-webjar" % "0.3")
 

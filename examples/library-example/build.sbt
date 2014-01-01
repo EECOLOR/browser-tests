@@ -3,7 +3,7 @@ name := "browser-tests-library-example"
 libraryDependencies ++= Seq(
   "org.webjars" % "requirejs" % "2.1.8" % "test",
   "org.webjars" % "jquery" % "1.10.2" % "test",
-  "org.qirx" %% "browser-tests-library" % "0.6-SNAPSHOT" % "test"
+  "org.qirx" %% "browser-tests-library" % "0.6" % "test"
 )
 
 resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
