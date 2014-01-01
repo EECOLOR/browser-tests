@@ -1,7 +1,9 @@
 import sbt._
 import sbt.Keys._
-import sbtrelease.ReleasePlugin.releaseSettings
+import sbtrelease.ReleasePlugin
+import sbtrelease.ReleasePlugin.ReleaseKeys._
 import org.qirx.sbtrelease.UpdateVersionInFiles
+import sbtbuildinfo.Plugin._
 
 object BrowserTestBuild extends Build {
 
@@ -16,21 +18,28 @@ object BrowserTestBuild extends Build {
     unmanagedSourceDirectories in Compile := Seq(),
     unmanagedSourceDirectories in Test := Seq())
 
+  val ivyCredentials = Credentials(Path.userHome / ".ivy2" / ".credentials")
+
+  val releaseSettings = ReleasePlugin.releaseSettings
+
   val publishSettings = releaseSettings ++ Seq(
     publishTo <<= version(rhinoflyRepo),
-    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"))
+    credentials += ivyCredentials)
+
+  val pluginPublishSettings = releaseSettings ++ Seq(
+    publishTo <<= version(rhinoflyPluginRepo),
+    publishMavenStyle := false,
+    credentials += ivyCredentials)
 
   val standardProjectSettings = defaultSettings ++ publishSettings
-
-  val exampleProjectSettings = defaultSettings ++ Seq(
-    publishArtifact := false)
+  val pluginProjectSettings = defaultSettings ++ pluginPublishSettings
 
   lazy val root = Project(id = "browser-tests-root", base = file("."))
     .settings(containerProjectSettings: _*)
-    .aggregate(browserTests, browserTestsPlugin, examples)
+    .aggregate(browserTestsLibrary, browserTestsPlugin)
 
-  lazy val browserTests =
-    Project(id = "browser-tests", base = file("library"))
+  lazy val browserTestsLibrary =
+    Project(id = "browser-tests-library", base = file("library"))
       .settings(standardProjectSettings: _*)
       .settings(
         libraryDependencies ++= Seq(
@@ -44,31 +53,36 @@ object BrowserTestBuild extends Build {
 
   lazy val browserTestsPlugin =
     Project(id = "browser-tests-plugin", base = file("plugin"))
-      .settings(standardProjectSettings: _*)
+      .settings(pluginProjectSettings: _*)
+      .settings(buildInfoSettings: _*)
       .settings(
         sbtPlugin := true,
         UpdateVersionInFiles(
           file("README.md"),
-          file("examples/plugin-example/build.sbt")))
-
-  lazy val examples =
-    Project(id = "browser-tests-examples", base = file("examples"))
-      .settings(containerProjectSettings: _*)
-      .aggregate(libraryExample, pluginExample)
-
-  lazy val libraryExample =
-    Project(id = "browser-tests-library-example", base = file("examples/library-example"))
-      .settings(exampleProjectSettings: _*)
-
-  lazy val pluginExample =
-    Project(id = "browser-tests-plugin-example", base = file("examples/plugin-example"))
-      .settings(exampleProjectSettings: _*)
-
-  private def rhinoflyRepo(version: String) = {
-    val repo = if (version endsWith "SNAPSHOT") "snapshot" else "release"
-    Some("Rhinofly Internal " + repo.capitalize + " Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-" + repo + "-local")
-  }
+          file("examples/plugin-example/project/plugins.sbt")),
+        sourceGenerators in Compile <+= buildInfo,
+        buildInfoObject := "LibraryBuildInfo",
+        buildInfoKeys := Seq[BuildInfoKey](
+          name in browserTestsLibrary,
+          version in browserTestsLibrary,
+          organization in browserTestsLibrary),
+        buildInfoPackage := "org.qirx.browserTests.build")
+      .dependsOn(browserTestsLibrary)
 
   def onlyScalaSourcesIn(c: Configuration) =
     unmanagedSourceDirectories in c := Seq((scalaSource in c).value)
+
+  private def rhinoflyRepoNameAndUrl(version: String) = {
+    val repo = if (version endsWith "SNAPSHOT") "snapshot" else "release"
+    ("Rhinofly Internal " + repo.capitalize + " Repository", "http://maven-repository.rhinofly.net:8081/artifactory/libs-" + repo + "-local")
+  }
+  private def rhinoflyRepo(version: String) = {
+    val (name, url) = rhinoflyRepoNameAndUrl(version)
+    Some(name at url)
+  }
+
+  private def rhinoflyPluginRepo(version: String) = {
+    val (name, url) = rhinoflyRepoNameAndUrl(version)
+    Some(Resolver.url(name, new URL(url))(Resolver.ivyStylePatterns))
+  }
 }

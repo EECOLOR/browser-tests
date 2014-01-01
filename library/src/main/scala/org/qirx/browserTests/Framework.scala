@@ -8,12 +8,12 @@ class Framework extends testing.Framework {
   val name = "Browser tests"
 
   val fingerprints = Array[testing.Fingerprint](
-    new testing.AnnotatedFingerprint {
-      val isModule = false
-      val annotationName = "browser-tests"
-    })
+    Fingerprints.Annotated,
+    Fingerprints.Subclass,
+    Fingerprints.SubclassModule)
 
   def runner(args: Array[String], remoteArgs: Array[String], testClassLoader: ClassLoader): testing.Runner =
     new Runner(args, remoteArgs, testClassLoader)
 
 }
+

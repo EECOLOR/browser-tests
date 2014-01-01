@@ -24,14 +24,14 @@ class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
     testPage, browserVersions, idleTimeout, testTimeout, resourceRouteFactory) =
     arguments
 
-  def run(eventProxy: EventProxy, testName: String): Unit =
+  def run(eventProxy: EventProxy, testName: String, isModule:Boolean): Unit =
     for (browserVersion <- browserVersions)
-      run(eventProxy, browserVersion, testName)
+      run(eventProxy, browserVersion, testName, isModule)
 
   private def run(
     eventProxy: EventProxy,
     browserVersion: BrowserVersion,
-    testName: String): Unit = {
+    testName: String, isModule:Boolean): Unit = {
 
     val (listener, host, port) = bindToServerWith(eventProxy)
 
@@ -40,7 +40,7 @@ class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
     val awaitServerUnbind = new TestRunner.Awaiter("unbind", listener.unbound, eventProxy)
     try {
       eventProxy.log.info(s"Running test '$testName' in '$browserVersion'")
-      run(host, port, browser, testName)
+      run(host, port, browser, testName, isModule)
       awaitServerUnbind(testTimeout, s"If your test is allowed to run longer, please change the '${Arguments.TEST_TIMEOUT}' argument")
     } catch {
       case t: Throwable => eventProxy.error(t)
@@ -53,8 +53,8 @@ class TestRunner(testClassLoader: ClassLoader, arguments: Arguments,
     }
   }
 
-  private def run(host: Host, port: Port, browser: Browser, testName: String): Unit = {
-    val url = s"http://$host:$port/$testPage?test=$testName"
+  private def run(host: Host, port: Port, browser: Browser, testName: String, isModule:Boolean): Unit = {
+    val url = s"http://$host:$port/$testPage?isModule=$isModule&test=$testName"
     Future(browser.get(url))
   }
 
