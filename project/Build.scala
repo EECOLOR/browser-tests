@@ -4,6 +4,7 @@ import sbtrelease.ReleasePlugin
 import sbtrelease.ReleasePlugin.ReleaseKeys._
 import org.qirx.sbtrelease.UpdateVersionInFiles
 import sbtbuildinfo.Plugin._
+import sbtrelease.ReleaseStateTransformations
 
 object BrowserTestBuild extends Build {
 
@@ -15,27 +16,40 @@ object BrowserTestBuild extends Build {
 
   val containerProjectSettings = defaultSettings ++ Seq(
     publishArtifact := false,
+    publish := {},
     unmanagedSourceDirectories in Compile := Seq(),
     unmanagedSourceDirectories in Test := Seq())
 
   val ivyCredentials = Credentials(Path.userHome / ".ivy2" / ".credentials")
 
-  val releaseSettings = ReleasePlugin.releaseSettings
+  val releaseSettings = ReleasePlugin.releaseSettings ++ Seq(
+    releaseProcess := releaseProcess.value.map { step =>
+      // remove the check from the publishArtifacts step
+      if (step == ReleaseStateTransformations.publishArtifacts)
+        step.copy(check = identity)
+      else step
+    },
+    UpdateVersionInFiles(
+      file("README.md"),
+      file("examples/plugin-example/project/plugins.sbt"),
+      file("examples/library-example/build.sbt")),
+    UpdateVersionInFiles.namePattern := "browser-tests-[^\"]+")
 
-  val publishSettings = releaseSettings ++ Seq(
-    publishTo <<= version(rhinoflyRepo),
-    credentials += ivyCredentials)
+  val libraryRepo = Seq(
+    credentials += ivyCredentials,
+    publishTo <<= version(rhinoflyRepo))
 
-  val pluginPublishSettings = releaseSettings ++ Seq(
+  val pluginRepo = Seq(
+    credentials += ivyCredentials,
     publishTo <<= version(rhinoflyPluginRepo),
-    publishMavenStyle := false,
-    credentials += ivyCredentials)
+    publishMavenStyle := false)
 
-  val standardProjectSettings = defaultSettings ++ publishSettings
-  val pluginProjectSettings = defaultSettings ++ pluginPublishSettings
+  val standardProjectSettings = defaultSettings ++ libraryRepo
+  val pluginProjectSettings = defaultSettings ++ pluginRepo
 
   lazy val root = Project(id = "browser-tests-root", base = file("."))
     .settings(containerProjectSettings: _*)
+    .settings(releaseSettings: _*)
     .aggregate(browserTestsLibrary, browserTestsPlugin)
 
   lazy val browserTestsLibrary =
@@ -46,10 +60,7 @@ object BrowserTestBuild extends Build {
           "org.scala-sbt" % "test-interface" % "1.0",
           "org.qirx" %% "embedded-spray" % "0.2",
           "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.39.0"),
-        resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local",
-        UpdateVersionInFiles(
-          file("README.md"),
-          file("examples/library-example/build.sbt")))
+        resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local")
 
   lazy val browserTestsPlugin =
     Project(id = "browser-tests-plugin", base = file("plugin"))
@@ -57,9 +68,6 @@ object BrowserTestBuild extends Build {
       .settings(buildInfoSettings: _*)
       .settings(
         sbtPlugin := true,
-        UpdateVersionInFiles(
-          file("README.md"),
-          file("examples/plugin-example/project/plugins.sbt")),
         sourceGenerators in Compile <+= buildInfo,
         buildInfoObject := "LibraryBuildInfo",
         buildInfoKeys := Seq[BuildInfoKey](
