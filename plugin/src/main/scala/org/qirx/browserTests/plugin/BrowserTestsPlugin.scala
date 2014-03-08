@@ -16,8 +16,6 @@ object BrowserTestsPlugin extends Plugin {
     val testTimeout = SettingKey[String]("test-timeout", "The amount of time the total test may take.")
   }
 
-  //testOptions in Test += Tests.Argument(testFramwork, "resourceRouteFactory", "EnhancedResourceRouteFactory")
-
   import BrowserTestsKeys._
 
   val testFramwork = TestFramework("org.qirx.browserTests.Framework")
@@ -29,6 +27,7 @@ object BrowserTestsPlugin extends Plugin {
 
   val browserTestsSettings = Seq(
     libraryDependencies += library,
+    resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local",
     testFrameworks += testFramwork,
     browserVersions := Seq.empty,
     testOptions in Test ++= {

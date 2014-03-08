@@ -1,4 +1,4 @@
-define([ 'jquery' ], function($) {
+define([ 'jquery', 'TestOutput' ], function($, testOutput) {
 
   var currentSuite = null;
 
@@ -6,7 +6,7 @@ define([ 'jquery' ], function($) {
 
     reportRunnerStarting : function(runner) {
       currentSuite = null;
-      info("");
+      info('');
     },
 
     reportSpecStarting : function(spec) {
@@ -20,10 +20,10 @@ define([ 'jquery' ], function($) {
       var results = spec.results();
       var description = spec.description;
 
-      if (results.passed) {
-        succeeded("  " + success() + " " + description);
+      if (results.passed()) {
+        testOutput.succeeded('  ' + successIcon() + ' ' + description);
       } else {
-        error(" " + failure() + " " + description);
+        error(' ' + failureIcon() + ' ' + description);
 
         $.each(results.getItems(), displayResult);
       }
@@ -32,10 +32,10 @@ define([ 'jquery' ], function($) {
     reportSuiteResults : function(suite) {
       var results = suite.results();
 
-      info("");
-      var title = "Total for suite " + suite.description;
-      var message =
-        results.totalCount + " specs, " + results.failedCount + " failure";
+      info('');
+      var title = 'Total for suite ' + suite.description;
+      var message = results.totalCount + ' specs, ' + results.failedCount
+          + ' failure';
 
       if (results.passedCount != results.totalCount) {
         error(title);
@@ -44,22 +44,22 @@ define([ 'jquery' ], function($) {
         info(title);
         infoWithInfoColor(message);
       }
-      info("");
+      info('');
     },
 
     reportRunnerResults : function(runner) {
-      // no need to report
+      testOutput.done();
     },
     log : info
   };
 
-
-  var successColor = ???;
-  var errorColor = ???;
-  var infoColor = ???;
+  var errorColor = '\u001b[31m';
+  var successColor = '\u001b[32m';
+  var infoColor = '\u001b[34m';
+  var resetColor = '\u001b[0m';
 
   function info(str) {
-    // testOutput.log.info(str)
+    testOutput.log.info(str);
   }
 
   function infoWithInfoColor(str) {
@@ -71,30 +71,34 @@ define([ 'jquery' ], function($) {
   }
 
   function error(str) {
-    // testOutput.log.error(str)
+    testOutput.log.error(str);
   }
 
   function withColor(color, message) {
-    // testOutput.color(message, color)
+    return color + message.split('\n').join(resetColor + '\n' + color) + resetColor;
   }
 
-  function failure() { withColor(errorColor, "x"); }
-  function success() { withColor(successColor, "+"); }
+  function failureIcon() {
+    return withColor(errorColor, 'x');
+  }
+  function successIcon() {
+    return withColor(successColor, '+');
+  }
 
   function displayResult(index, result) {
     switch (result.type) {
 
-    case "log":
-      info("    " + result);
+    case 'log':
+      info('    ' + result);
       break;
-    case "expect":
-      if (!r.passed()) {
-        var stack = getScriptStack(r.trace.stack);
+    case 'expect':
+      if (!result.passed()) {
+        var stack = getScriptStack(result.trace.stack);
 
         if (stack.length == 0)
-          //testOutput.failure(s"    $message")
+          testOutput.failure(' ' + result.message);
         else
-          //testOutput.error(s"    $message", stack)
+          testOutput.error(' ' + result.message, stack);
       }
       break;
     }
@@ -102,26 +106,24 @@ define([ 'jquery' ], function($) {
 
   function getScriptStack(stack) {
     if (stack instanceof String) {
-      var stackTracePattern = "^(.+?) ([^ ]+\\.js):(\\d+).*?$";
+      var stackTracePattern = /^(.+?) ([^ ]+\.js):(\d+).*?$/;
 
-      var stackArray = stack.split("\n");
+      var stackArray = stack.split('\n');
       return $.map(stackArray, function(value) {
-        //match regex
-        // if not matched, throw javascript exception
-        var fileName = ???
-        var lineNumber = ???
-        return {
-          fileName : fileName,
-          lineNumber : parseInt(lineNumber, 10)
-        };
+        var match = value.match(stackTracePattern);
+        if (match) {
+          var fileName = match[1];
+          var lineNumber = match[2];
+          return {
+            fileName : fileName,
+            lineNumber : parseInt(lineNumber, 10)
+          };
+        } else
+          throw new Error('Stack element did not match pattern. Value: '
+              + value);
       });
-    } else {
-     return [];
-    }
-  }
-
-  function succeeded(str) {
-
+    } else
+      return [];
   }
 
   return reporter;
