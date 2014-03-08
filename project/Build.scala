@@ -8,6 +8,8 @@ import sbtrelease.ReleaseStateTransformations
 
 object BrowserTestBuild extends Build {
 
+  resolvers in ThisBuild += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
+
   // for all projects
   val defaultSettings = Seq(
     organization := "org.qirx",
@@ -59,8 +61,7 @@ object BrowserTestBuild extends Build {
         libraryDependencies ++= Seq(
           "org.scala-sbt" % "test-interface" % "1.0",
           "org.qirx" %% "embedded-spray" % "0.2",
-          "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.39.0"),
-        resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local")
+          "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.39.0"))
 
   lazy val browserTestsPlugin =
     Project(id = "browser-tests-plugin", base = file("plugin"))

@@ -10,6 +10,7 @@ name := "browser-tests-plugin-example"
 
 libraryDependencies ++= Seq(
   "org.webjars" % "requirejs" % "2.1.8" % "test",
+  "org.webjars" % "jasmine" % "1.3.1" % "test",
   "org.webjars" % "jquery" % "1.10.2" % "test"
 )
 

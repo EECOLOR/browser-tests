@@ -7,7 +7,13 @@
   // add a path for jquery
   requirejs.config({
     paths : {
-      "jquery" : "webjar/jquery"
+      "jquery" : "webjar/jquery",
+      "jasmine" : "webjar/jasmine"
+    },
+    shim : {
+      'jasmine' : {
+        exports : 'jasmine'
+      }
     }
   });
 
